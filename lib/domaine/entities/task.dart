@@ -8,42 +8,156 @@ enum Priority {
     Priority.medium => 'Moyenne',
     Priority.high => 'Haute',
   };
+
+  int get sortRank => switch (this) {
+    Priority.high => 0,
+    Priority.medium => 1,
+    Priority.low => 2,
+  };
 }
 
-class Task {
+abstract class Task {
   final String id;
   final String title;
   final bool done;
   final Priority priority;
+  final DateTime? dueDate;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   const Task({
-    required this.id, 
-    required this.title, 
-    this.done = false, 
+    required this.id,
+    required this.title,
+    this.done = false,
     this.priority = Priority.medium,
+    this.dueDate,
     required this.createdAt,
-    required this.updatedAt
+    required this.updatedAt,
   });
+
+  factory Task.build({
+    required String id,
+    required String title,
+    bool done = false,
+    Priority priority = Priority.medium,
+    DateTime? dueDate,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) {
+    final normalizedTitle = title.trim();
+    if (priority == Priority.high) {
+      return UrgentTask(
+        id: id,
+        title: normalizedTitle,
+        done: done,
+        dueDate: dueDate,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      );
+    }
+
+    return StandardTask(
+      id: id,
+      title: normalizedTitle,
+      done: done,
+      priority: priority,
+      dueDate: dueDate,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
 
   factory Task.create({
     required String id,
     required String title,
     Priority priority = Priority.medium,
+    DateTime? dueDate,
   }) {
     final now = DateTime.now();
-    return Task(id: id, title: title, priority: priority, createdAt: now, updatedAt: now);
+    return Task.build(
+      id: id,
+      title: title,
+      priority: priority,
+      dueDate: dueDate,
+      createdAt: now,
+      updatedAt: now,
+    );
   }
 
-  Task copyWith({String? title, bool? done, Priority? priority, DateTime? updatedAt}) {
-    return Task(
-      id: id, 
-      title: title ?? this.title, 
+  bool get isOverdue =>
+      dueDate != null && !done && dueDate!.isBefore(DateTime.now());
+
+  Task copyWith({
+    String? title,
+    bool? done,
+    Priority? priority,
+    DateTime? dueDate,
+    bool clearDueDate = false,
+    DateTime? updatedAt,
+  });
+}
+
+class StandardTask extends Task {
+  const StandardTask({
+    required super.id,
+    required super.title,
+    super.done,
+    super.priority,
+    super.dueDate,
+    required super.createdAt,
+    required super.updatedAt,
+  });
+
+  @override
+  Task copyWith({
+    String? title,
+    bool? done,
+    Priority? priority,
+    DateTime? dueDate,
+    bool clearDueDate = false,
+    DateTime? updatedAt,
+  }) {
+    return Task.build(
+      id: id,
+      title: title ?? this.title,
       done: done ?? this.done,
-      priority: priority?? this.priority,
+      priority: priority ?? this.priority,
+      dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
       createdAt: createdAt,
-      updatedAt: updatedAt ?? DateTime.now()
+      updatedAt: updatedAt ?? DateTime.now(),
+    );
+  }
+}
+
+class UrgentTask extends Task {
+  const UrgentTask({
+    required super.id,
+    required super.title,
+    super.done,
+    super.dueDate,
+    required super.createdAt,
+    required super.updatedAt,
+  }) : super(priority: Priority.high);
+
+  String get warningLabel => 'Urgent';
+
+  @override
+  Task copyWith({
+    String? title,
+    bool? done,
+    Priority? priority,
+    DateTime? dueDate,
+    bool clearDueDate = false,
+    DateTime? updatedAt,
+  }) {
+    return Task.build(
+      id: id,
+      title: title ?? this.title,
+      done: done ?? this.done,
+      priority: priority ?? this.priority,
+      dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
     );
   }
 }

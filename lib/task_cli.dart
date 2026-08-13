@@ -1,172 +1,21 @@
 import 'dart:io';
-// import 'package:dart_tui/dart_tui.dart';
-// import 'package:task_cli/presentation/widgets/footet_widget.dart';
-// import 'package:task_cli/presentation/widgets/header_widget.dart';
-
-// String shortcutKey(List<String> keys) {
-//   String keyBadge(String key) => '\x1B[100;97m $key \x1B[0m';
-//   return keys.map(keyBadge).join('\x1B[2m + \x1B[0m');
-// }
-
-// String shortcutInstructionJustified(String label, List<String> keys, int shortcutContainerWidth) {
-//   final shortcut = shortcutKey(keys);
-//   final shortcutWidth = getWidth(shortcut);
-
-//   final labelStyled = '\x1B[2m$label\x1B[0m';
-
-//   final gap = shortcutContainerWidth - label.length - shortcutWidth;
-//   final safeGap = gap > 1 ? gap : 1;
-
-//   return labelStyled + (' ' * safeGap) + shortcut;
-// }
-
-// void main() async {
-//   await Program(
-//     options: const ProgramOptions(
-//       altScreen: true, 
-//       tickInterval: Duration(milliseconds: 530)
-//     ),
-//   ).run(FullscreenModel());
-// }
-
-// final class FullscreenModel extends TeaModel {
-//   final TextInputModel textInput;
-//   final CursorModel cursor;
-
-//   static final shortcutList = [
-//     ("Ajouter une nouvelle tâche", ["Ctrl", "N"]),
-//     ("Modifier une tâche", ["Ctrl", "U"]),
-//     ("Lister les tâches", ["Ctrl", "L"]),
-//     ("Marquer une tâche comme terminée", ["Ctrl", "D"]),
-//     ("Supprimer une tâche", ["Ctrl", "R"]),
-//     ("Afficher l'aide", ["Ctrl", "H"]),
-//     ("Quitter l'application", ["Ctrl", "C"]),
-//   ];
-  
-//   FullscreenModel({ TextInputModel? textInput, CursorModel? cursor })
-//     : textInput = textInput ??
-//       TextInputModel(
-//         placeholder: 'Type something…',
-//         label: '>',
-//         charLimit: 80,
-//         validate: (value) => value.trim().isNotEmpty,
-//         focused: true,
-//         suggestions: ["help", "quit"]
-//       ),
-//     cursor = cursor ??
-//       CursorModel(
-//         mode: CursorMode.block,
-//         blink: true,
-//       );
-
-
-//   @override
-//   Cmd? init() => null;
-
-//   @override
-//   (Model, Cmd?) update(Msg msg) {
-//     if (msg is KeyMsg && (msg.key == 'ctrl+c')) {
-//       return (this, () => quit());
-//     }
-
-//     if (msg is WindowSizeMsg) {
-//       return (this, null);
-//     }
-    
-//     if (msg is TickMsg) {
-//       final (updatedCursor, cursorCmd) = cursor.update(msg);
-//       return (
-//         FullscreenModel(textInput: textInput, cursor: updatedCursor as CursorModel),
-//         cursorCmd,
-//       );
-//     } 
-
-//     final (updatedTextInput, cmd) = textInput.update(msg);
-//     return (
-//       FullscreenModel(textInput: updatedTextInput as TextInputModel, cursor: cursor),
-//       cmd,
-//     );
-
-//   }
-
-//   @override
-//   View view() {
-//     // Recupérer la taille actuelle du terminal
-//     final int width = stdout.hasTerminal ? stdout.terminalColumns : 80;
-//     final int height = stdout.hasTerminal ? stdout.terminalLines : 24;
-
-//     final buffer = StringBuffer();
-
-//     // CONSTRUIRE LE HEADER
-//     final (headerText, headerLines)  = HeaderWidget.build(width);
-//     buffer.write(headerText);
-
-//     // CONSTRUIRE LE BODY (HAUTEUR DYNAMIQUE)
-//     // La hauteur du body = Hauteur totale - ligne header (ligne header = ligne name + ligne metadonnees + ligne metadonnees + 2 ligne de separation) - ligne footer
-//     // final int headerLiness = buffer.toString().split('\n').length - 1;
-//     const int footerLines = 3; // Ligne de separation + ligne footer
-//     int bodyHeight = height - headerLines - footerLines;
-//     if (bodyHeight < 0) bodyHeight = 0;
-    
-
-//     int sideMargin = (width * 0.3).round();
-//     final int shortcutContainerWidth = width - (sideMargin * 2);
-
-//     final List<String> shortcutView = [];
-//     for (int i = 0; i < shortcutList.length; i++) {
-//       final (label, keys) = shortcutList[i];
-//       shortcutView.add(shortcutInstructionJustified(label, keys, shortcutContainerWidth));
-
-//       if (i < shortcutList.length - 1) {
-//         shortcutView.add(''); // ligne vide entre chaque raccourci, sauf après le dernier
-//       }
-//     }
-    
-//     final int blockStart = (bodyHeight - shortcutView.length) ~/ 2;
-
-//     for (int i = 0; i < bodyHeight; i++) {
-//       final int rowInBlock = i - blockStart;
-//       if (rowInBlock >= 0 && rowInBlock < shortcutView.length) {
-//         final currentLine = shortcutView[rowInBlock];
-//         if (currentLine.isEmpty) {
-//           buffer.writeln("".padRight(width));
-//         } else {
-//           buffer.writeln("${' ' * sideMargin} $currentLine ${' ' * sideMargin}");
-//         }
-//       } else {
-//         buffer.writeln("".padRight(width));
-//       }
-//     }
-
-//     // CONSTRUIRE LE FOOTER
-//     String separatorLine = "".padRight(width, "─");
-//     buffer.write(FooterWidget.build(width, separatorLine, textInput, cursor));
-
-//     return newView(buffer.toString());
-//   }
-// }
-
-
-
-
-
 
 import 'package:dart_tui/dart_tui.dart';
-
 import 'package:task_cli/domaine/entities/task.dart';
+import 'package:task_cli/domaine/exceptions/task_cli_exception.dart';
 import 'package:task_cli/domaine/usecases/add_task.dart';
+import 'package:task_cli/domaine/usecases/delete_task.dart';
 import 'package:task_cli/domaine/usecases/list_tasks.dart';
 import 'package:task_cli/domaine/usecases/toggle_task_done.dart';
-import 'package:task_cli/domaine/usecases/delete_task.dart';
 import 'package:task_cli/domaine/usecases/update_task_title.dart';
 import 'package:task_cli/presentation/app/app_messages.dart';
 import 'package:task_cli/presentation/app/wizard_state.dart';
-import 'package:task_cli/presentation/widgets/header_widget.dart';
-import 'package:task_cli/presentation/widgets/footet_widget.dart';
-import 'package:task_cli/presentation/widgets/command_output_widget.dart';
-import 'package:task_cli/presentation/screens/task_list_screen.dart';
 import 'package:task_cli/presentation/commands/command.dart';
 import 'package:task_cli/presentation/commands/command_parser.dart';
+import 'package:task_cli/presentation/screens/task_list_screen.dart';
+import 'package:task_cli/presentation/widgets/command_output_widget.dart';
+import 'package:task_cli/presentation/widgets/footet_widget.dart';
+import 'package:task_cli/presentation/widgets/header_widget.dart';
 
 final class FullscreenModel extends TeaModel {
   final List<Task> tasks;
@@ -194,23 +43,37 @@ final class FullscreenModel extends TeaModel {
     this.wizard,
     TextInputModel? textInput,
     CursorModel? cursor,
-  })  : textInput = textInput ?? _freshTextInputStatic(),
-        cursor = cursor ?? CursorModel(mode: CursorMode.block, blink: true);
+  }) : textInput = textInput ?? _freshTextInputStatic(),
+       cursor = cursor ?? CursorModel(mode: CursorMode.block, blink: true);
 
-  static TextInputModel _freshTextInputStatic() {
+  static TextInputModel _freshTextInputStatic({
+    String placeholder = 'Tape une commande...',
+  }) {
     return TextInputModel(
-      placeholder: "Tape une commande…",
+      placeholder: placeholder,
       label: '>',
-      charLimit: 80,
+      charLimit: 100,
       validate: (value) => value.trim().isNotEmpty,
       focused: true,
-      suggestions: ["help", "list", "add", "done", "delete", "update", "quit"],
+      suggestions: const [
+        'help',
+        'list',
+        'list priority',
+        'list date',
+        'add',
+        'done',
+        'delete',
+        'update',
+        'quit',
+      ],
     );
   }
 
   TextInputModel _freshTextInput({
-    String placeholder = 'Tape une commande…',
-  }) => _freshTextInputStatic();
+    String placeholder = 'Tape une commande...',
+  }) {
+    return _freshTextInputStatic(placeholder: placeholder);
+  }
 
   FullscreenModel copyWith({
     List<Task>? tasks,
@@ -229,7 +92,9 @@ final class FullscreenModel extends TeaModel {
       deleteTaskUseCase: deleteTaskUseCase,
       updateTaskTitleUseCase: updateTaskTitleUseCase,
       tasks: tasks ?? this.tasks,
-      feedbackMessage: clearFeedback ? null : (feedbackMessage ?? this.feedbackMessage),
+      feedbackMessage: clearFeedback
+          ? null
+          : (feedbackMessage ?? this.feedbackMessage),
       feedbackSuccess: feedbackSuccess ?? this.feedbackSuccess,
       wizard: clearWizard ? null : (wizard ?? this.wizard),
       textInput: textInput ?? this.textInput,
@@ -237,9 +102,27 @@ final class FullscreenModel extends TeaModel {
     );
   }
 
-  Cmd _loadTasksCmd() => () async {
-    final result = await listTasksUseCase();
-    return TasksLoadedMsg(result);
+  Cmd _loadTasksCmd({TaskSort sort = TaskSort.none}) => () async {
+    try {
+      final result = await listTasksUseCase(sort: sort);
+      return TasksLoadedMsg(result);
+    } on TaskCliException catch (error) {
+      return CommandFeedbackMsg(success: false, message: error.message);
+    }
+  };
+
+  Cmd _execute(String message, Future<void> Function() action) => () async {
+    try {
+      await action();
+      final updated = await listTasksUseCase();
+      return CommandExecutedMsg(
+        success: true,
+        message: message,
+        tasks: updated,
+      );
+    } on TaskCliException catch (error) {
+      return CommandFeedbackMsg(success: false, message: error.message);
+    }
   };
 
   @override
@@ -262,7 +145,11 @@ final class FullscreenModel extends TeaModel {
 
     if (msg is CommandExecutedMsg) {
       return (
-        copyWith(tasks: msg.tasks, feedbackMessage: msg.message, feedbackSuccess: msg.success),
+        copyWith(
+          tasks: msg.tasks,
+          feedbackMessage: msg.message,
+          feedbackSuccess: msg.success,
+        ),
         null,
       );
     }
@@ -291,7 +178,7 @@ final class FullscreenModel extends TeaModel {
         copyWith(
           clearWizard: true,
           textInput: _freshTextInput(),
-          feedbackMessage: 'Assistant annulé.',
+          feedbackMessage: 'Assistant annule.',
           feedbackSuccess: false,
         ),
         null,
@@ -304,7 +191,6 @@ final class FullscreenModel extends TeaModel {
       if (wizard != null) {
         final parsed = CommandParser.parse(text);
         if (parsed is! InvalidCommand) {
-          // L'utilisateur a tapé une vraie commande : elle prend le dessus, le wizard est annulé.
           return copyWith(clearWizard: true)._dispatchCommand(parsed);
         }
         return _handleWizardInput(text);
@@ -322,20 +208,23 @@ final class FullscreenModel extends TeaModel {
   }
 
   (Model, Cmd?) _handleWizardInput(String text) {
-    final w = wizard!;
+    final currentWizard = wizard!;
 
-    if (w.step == WizardStep.title) {
+    if (currentWizard.step == WizardStep.title) {
       if (text.isEmpty) {
         return (
           copyWith(
-            feedbackMessage: 'Le titre ne peut pas être vide.',
+            feedbackMessage: 'Le titre ne peut pas etre vide.',
             feedbackSuccess: false,
-            textInput: _freshTextInput(placeholder: w.prompt),
+            textInput: _freshTextInput(placeholder: currentWizard.prompt),
           ),
           null,
         );
       }
-      final nextWizard = w.copyWith(step: WizardStep.priority, draftTitle: text);
+      final nextWizard = currentWizard.copyWith(
+        step: WizardStep.priority,
+        draftTitle: text,
+      );
       return (
         copyWith(
           wizard: nextWizard,
@@ -346,16 +235,15 @@ final class FullscreenModel extends TeaModel {
       );
     }
 
-    // step == WizardStep.priority
-    Priority priority = Priority.medium;
+    var priority = Priority.medium;
     if (text.isNotEmpty) {
       final parsed = CommandParser.parsePriority(text);
       if (parsed == null) {
         return (
           copyWith(
-            feedbackMessage: 'Priorité invalide: "$text" (low/medium/high)',
+            feedbackMessage: 'Priorite invalide: "$text" (low/medium/high)',
             feedbackSuccess: false,
-            textInput: _freshTextInput(placeholder: w.prompt),
+            textInput: _freshTextInput(placeholder: currentWizard.prompt),
           ),
           null,
         );
@@ -363,103 +251,105 @@ final class FullscreenModel extends TeaModel {
       priority = parsed;
     }
 
-    final title = w.draftTitle;
+    final title = currentWizard.draftTitle;
     return (
       copyWith(clearWizard: true, textInput: _freshTextInput()),
-      () async {
-        await addTaskUseCase(title, priority: priority);
-        final updated = await listTasksUseCase();
-        return CommandExecutedMsg(success: true, message: 'Tâche ajoutée : "$title"', tasks: updated);
-      },
+      _execute(
+        'Tache ajoutee : "$title"',
+        () => addTaskUseCase(title, priority: priority),
+      ),
     );
   }
 
   (Model, Cmd?) _dispatchCommand(Command cmd) {
     switch (cmd) {
-      case AddCommand(:final title, :final priority):
+      case AddCommand(:final title, :final priority, :final dueDate):
         return (
           copyWith(textInput: _freshTextInput()),
-          () async {
-            await addTaskUseCase(title, priority: priority);
-            final updated = await listTasksUseCase();
-            return CommandExecutedMsg(success: true, message: 'Tâche ajoutée : "$title"', tasks: updated);
-          },
+          _execute(
+            'Tache ajoutee : "$title"',
+            () => addTaskUseCase(title, priority: priority, dueDate: dueDate),
+          ),
         );
 
-      case ListCommand():
+      case ListCommand(:final sort):
         return (
           copyWith(textInput: _freshTextInput()),
           () async {
-            final updated = await listTasksUseCase();
-            return CommandExecutedMsg(success: true, message: 'Liste rafraîchie.', tasks: updated);
+            try {
+              final updated = await listTasksUseCase(sort: sort);
+              return CommandExecutedMsg(
+                success: true,
+                message: 'Liste rafraichie.',
+                tasks: updated,
+              );
+            } on TaskCliException catch (error) {
+              return CommandFeedbackMsg(success: false, message: error.message);
+            }
           },
         );
 
       case DoneCommand(:final index):
-        if (index < 1 || index > tasks.length) {
-          return (
-            copyWith(textInput: _freshTextInput()),
-            () async => CommandFeedbackMsg(
-                  success: false,
-                  message: 'Numéro invalide: $index (1-${tasks.length})',
-                ),
-          );
-        }
+        final invalid = _validateIndex(index);
+        if (invalid != null) return invalid;
         final id = tasks[index - 1].id;
         return (
           copyWith(textInput: _freshTextInput()),
-          () async {
-            await toggleTaskDoneUseCase(id);
-            final updated = await listTasksUseCase();
-            return CommandExecutedMsg(success: true, message: 'Tâche $index mise à jour.', tasks: updated);
-          },
+          _execute(
+            'Tache $index mise a jour.',
+            () => toggleTaskDoneUseCase(id),
+          ),
         );
 
       case DeleteCommand(:final index):
-        if (index < 1 || index > tasks.length) {
-          return (
-            copyWith(textInput: _freshTextInput()),
-            () async => CommandFeedbackMsg(
-                  success: false,
-                  message: 'Numéro invalide: $index (1-${tasks.length})',
-                ),
-          );
-        }
+        final invalid = _validateIndex(index);
+        if (invalid != null) return invalid;
         final id = tasks[index - 1].id;
         return (
           copyWith(textInput: _freshTextInput()),
-          () async {
-            await deleteTaskUseCase(id);
-            final updated = await listTasksUseCase();
-            return CommandExecutedMsg(success: true, message: 'Tâche $index supprimée.', tasks: updated);
-          },
+          _execute('Tache $index supprimee.', () => deleteTaskUseCase(id)),
         );
 
-      case UpdateCommand(:final index, :final newTitle):
-        if (index < 1 || index > tasks.length) {
-          return (
-            copyWith(textInput: _freshTextInput()),
-            () async => CommandFeedbackMsg(
-                  success: false,
-                  message: 'Numéro invalide: $index (1-${tasks.length})',
-                ),
-          );
-        }
+      case UpdateCommand(
+        :final index,
+        :final newTitle,
+        :final newPriority,
+        :final newDueDate,
+      ):
+        final invalid = _validateIndex(index);
+        if (invalid != null) return invalid;
         final id = tasks[index - 1].id;
         return (
           copyWith(textInput: _freshTextInput()),
-          () async {
-            await updateTaskTitleUseCase(id, newTitle);
-            final updated = await listTasksUseCase();
-            return CommandExecutedMsg(success: true, message: 'Tâche $index renommée.', tasks: updated);
-          },
+          _execute(
+            'Tache $index renommee.',
+            () => updateTaskTitleUseCase(
+              id,
+              newTitle,
+              priority: newPriority,
+              dueDate: newDueDate,
+            ),
+          ),
+        );
+
+      case PriorityCommand(:final index, :final priority):
+        final invalid = _validateIndex(index);
+        if (invalid != null) return invalid;
+        final task = tasks[index - 1];
+        return (
+          copyWith(textInput: _freshTextInput()),
+          _execute(
+            'Priorite de la tache $index mise a jour.',
+            () =>
+                updateTaskTitleUseCase(task.id, task.title, priority: priority),
+          ),
         );
 
       case HelpCommand():
         return (
           copyWith(
             feedbackMessage:
-                'Commandes: add "titre" [priorité] · list · done <n> · delete <n> · update <n> "titre" · quit  —  Ctrl+N: assistant guidé',
+                'Commandes: add "titre" [priorite] [YYYY-MM-DD] | list [priority|date] | done <n> | delete <n> | update <n> "titre" [priorite] [YYYY-MM-DD] | quit',
             feedbackSuccess: true,
             textInput: _freshTextInput(),
           ),
@@ -471,26 +361,38 @@ final class FullscreenModel extends TeaModel {
 
       case InvalidCommand(:final reason):
         return (
-          copyWith(feedbackMessage: reason, feedbackSuccess: false, textInput: _freshTextInput()),
+          copyWith(
+            feedbackMessage: reason,
+            feedbackSuccess: false,
+            textInput: _freshTextInput(),
+          ),
           null,
         );
-      case PriorityCommand():
-        // TODO: Handle this case.
-        throw UnimplementedError();
     }
+  }
+
+  (Model, Cmd?)? _validateIndex(int index) {
+    if (index >= 1 && index <= tasks.length) return null;
+    return (
+      copyWith(textInput: _freshTextInput()),
+      () async => CommandFeedbackMsg(
+        success: false,
+        message: 'Numero invalide: $index (1-${tasks.length})',
+      ),
+    );
   }
 
   @override
   View view() {
-    final int width = stdout.hasTerminal ? stdout.terminalColumns : 80;
-    final int height = stdout.hasTerminal ? stdout.terminalLines : 24;
+    final width = stdout.hasTerminal ? stdout.terminalColumns : 80;
+    final height = stdout.hasTerminal ? stdout.terminalLines : 24;
     final buffer = StringBuffer();
 
     final (headerText, headerLines) = HeaderWidget.build(width);
     buffer.write(headerText);
 
     const footerLines = 3;
-    int bodyHeight = height - headerLines - footerLines;
+    var bodyHeight = height - headerLines - footerLines;
     if (bodyHeight < 0) bodyHeight = 0;
 
     final topLines = CommandOutputWidget.build(
@@ -501,11 +403,11 @@ final class FullscreenModel extends TeaModel {
     );
 
     final bodyLines = TaskListScreen.render(width, bodyHeight, tasks, topLines);
-    for (final l in bodyLines) {
-      buffer.writeln(l);
+    for (final line in bodyLines) {
+      buffer.writeln(line);
     }
 
-    final separatorLine = "".padRight(width, "─");
+    final separatorLine = ''.padRight(width, '-');
     buffer.write(FooterWidget.build(width, separatorLine, textInput, cursor));
 
     return newView(buffer.toString());

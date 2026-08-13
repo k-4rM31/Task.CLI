@@ -1,33 +1,49 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:task_cli/domaine/entities/task.dart';
 import 'package:task_cli/data/models/task_models.dart';
+import 'package:task_cli/domaine/entities/task.dart';
+import 'package:task_cli/domaine/exceptions/task_cli_exception.dart';
 import 'package:task_cli/domaine/repositories/task_repository.dart';
-
-
 
 class JsonFileTaskRepository implements TaskRepository {
   final File _file;
 
   JsonFileTaskRepository(String path) : _file = File(path);
 
-  /// Lire le fichier et retourne la liste brute de Maps JSON.
-  /// Si le fichier n'existe pas encore ou est vide, retourne une liste vide.
   Future<List<Map<String, dynamic>>> _readRaw() async {
-    if (!await _file.exists()) return []; // si fichier n'existe pas, retourne une liste vide
+    try {
+      if (!await _file.exists()) return [];
 
-    final content = await _file.readAsString();
-    if (content.trim().isEmpty) return []; // si le fichier existe mais son contenus est vide, retourne une liste vide
+      final content = await _file.readAsString();
+      if (content.trim().isEmpty) return [];
 
-    final decoded = jsonDecode(content) as List;
-    return decoded.cast<Map<String, dynamic>>();
+      final decoded = jsonDecode(content);
+      if (decoded is! List) {
+        throw const StorageException(
+          'Le fichier JSON doit contenir une liste.',
+        );
+      }
+
+      return decoded.cast<Map<String, dynamic>>();
+    } on StorageException {
+      rethrow;
+    } on FormatException catch (error) {
+      throw StorageException('JSON invalide: ${error.message}');
+    } on FileSystemException catch (error) {
+      throw StorageException('Erreur fichier: ${error.message}');
+    }
   }
 
-  /// Écrit la liste de Maps JSON dans le fichier (créé si besoin).
   Future<void> _writeRaw(List<Map<String, dynamic>> data) async {
-    await _file.create(recursive: true);
-    await _file.writeAsString(jsonEncode(data));
+    try {
+      await _file.create(recursive: true);
+      await _file.writeAsString(
+        const JsonEncoder.withIndent('  ').convert(data),
+      );
+    } on FileSystemException catch (error) {
+      throw StorageException('Erreur fichier: ${error.message}');
+    }
   }
 
   @override
@@ -39,6 +55,9 @@ class JsonFileTaskRepository implements TaskRepository {
   @override
   Future<void> add(Task task) async {
     final raw = await _readRaw();
+    if (raw.any((item) => item['id'] == task.id)) {
+      throw InvalidTaskException('Une tache existe deja avec id: ${task.id}');
+    }
     raw.add(TaskModel.toJson(task));
     await _writeRaw(raw);
   }
@@ -46,17 +65,20 @@ class JsonFileTaskRepository implements TaskRepository {
   @override
   Future<void> update(Task task) async {
     final raw = await _readRaw();
-    final index = raw.indexWhere((m) => m['id'] == task.id);
-    if (index != -1) {
-      raw[index] = TaskModel.toJson(task);
-    }
+    final index = raw.indexWhere((item) => item['id'] == task.id);
+    if (index == -1) throw TaskNotFoundException(task.id);
+
+    raw[index] = TaskModel.toJson(task);
     await _writeRaw(raw);
   }
 
   @override
   Future<void> delete(String id) async {
     final raw = await _readRaw();
-    raw.removeWhere((m) => m['id'] == id);
+    final initialLength = raw.length;
+    raw.removeWhere((item) => item['id'] == id);
+    if (raw.length == initialLength) throw TaskNotFoundException(id);
+
     await _writeRaw(raw);
   }
 }

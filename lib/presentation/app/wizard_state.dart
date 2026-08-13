@@ -4,7 +4,10 @@ class AddTaskWizardState {
   final WizardStep step;
   final String draftTitle;
 
-  const AddTaskWizardState({this.step = WizardStep.title, this.draftTitle = ''});
+  const AddTaskWizardState({
+    this.step = WizardStep.title,
+    this.draftTitle = '',
+  });
 
   AddTaskWizardState copyWith({WizardStep? step, String? draftTitle}) {
     return AddTaskWizardState(
@@ -15,8 +18,8 @@ class AddTaskWizardState {
 
   String get prompt => switch (step) {
     WizardStep.title =>
-      'Étape 1/2 — Titre de la tâche (Entrée pour valider, Esc pour annuler) :',
+      'Etape 1/2 - Titre de la tache (Entree pour valider, Esc pour annuler) :',
     WizardStep.priority =>
-      'Étape 2/2 — Priorité : low / medium / high (Entrée = medium) :',
+      'Etape 2/2 - Priorite : low / medium / high (Entree = medium) :',
   };
 }

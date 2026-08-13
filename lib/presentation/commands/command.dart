@@ -1,4 +1,5 @@
 import 'package:task_cli/domaine/entities/task.dart';
+import 'package:task_cli/domaine/usecases/list_tasks.dart';
 
 sealed class Command {
   const Command();
@@ -7,11 +8,13 @@ sealed class Command {
 class AddCommand extends Command {
   final String title;
   final Priority priority;
-  const AddCommand(this.title, this.priority);
+  final DateTime? dueDate;
+  const AddCommand(this.title, this.priority, {this.dueDate});
 }
 
 class ListCommand extends Command {
-  const ListCommand();
+  final TaskSort sort;
+  const ListCommand({this.sort = TaskSort.none});
 }
 
 class DoneCommand extends Command {
@@ -28,13 +31,19 @@ class UpdateCommand extends Command {
   final int index;
   final String newTitle;
   final Priority? newPriority;
-  const UpdateCommand(this.index, this.newTitle, this.newPriority);
+  final DateTime? newDueDate;
+  const UpdateCommand(
+    this.index,
+    this.newTitle,
+    this.newPriority, {
+    this.newDueDate,
+  });
 }
 
-class PriorityCommand extends Command{
-  final String index;
-  final Priority parsedPriority;
-  const PriorityCommand(this.index, this.parsedPriority);
+class PriorityCommand extends Command {
+  final int index;
+  final Priority priority;
+  const PriorityCommand(this.index, this.priority);
 }
 
 class HelpCommand extends Command {
