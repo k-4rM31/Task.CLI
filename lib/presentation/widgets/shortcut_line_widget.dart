@@ -2,7 +2,8 @@ import 'package:task_cli/config/shortcut_config.dart';
 import 'package:task_cli/presentation/utils/text_style.dart';
 
 class ShortcutsWidget {
-  static final List<(String, List<String>)> items = ShortcutConfig.shortcutLinesList;
+  static final List<(String, List<String>)> items =
+      ShortcutConfig.shortcutLinesList;
 
   static List<String> buildLines(int width, {double sideMarginRatio = 0.3}) {
     final sideMargin = (width * sideMarginRatio).round();

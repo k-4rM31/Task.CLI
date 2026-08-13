@@ -11,7 +11,11 @@ class CommandExecutedMsg extends Msg {
   final bool success;
   final String message;
   final List<Task> tasks;
-  CommandExecutedMsg({required this.success, required this.message, required this.tasks});
+  CommandExecutedMsg({
+    required this.success,
+    required this.message,
+    required this.tasks,
+  });
 }
 
 /// Commande qui ne modifie rien (erreur, help) : juste un message.

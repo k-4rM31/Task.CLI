@@ -12,12 +12,18 @@ class CommandOutputWidget {
     String? wizardPrompt,
   }) {
     if (wizardPrompt != null) {
-      return [_promptStyle.render(wizardPrompt).padRight(width), "".padRight(width)];
+      return [
+        _promptStyle.render(wizardPrompt).padRight(width),
+        ''.padRight(width),
+      ];
     }
     if (feedbackMessage != null) {
       final style = feedbackSuccess ? _successStyle : _errorStyle;
-      return [style.render(feedbackMessage).padRight(width), "".padRight(width)];
+      return [
+        style.render(feedbackMessage).padRight(width),
+        ''.padRight(width),
+      ];
     }
-    return ["".padRight(width), "".padRight(width)];
+    return [''.padRight(width), ''.padRight(width)];
   }
 }

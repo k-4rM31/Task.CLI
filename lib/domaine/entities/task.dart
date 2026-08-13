@@ -35,7 +35,139 @@ abstract class Task {
     required this.updatedAt,
   });
 
-  factory Task.build({
+  factory Task.create({
+    required String id,
+    required String title,
+    Priority priority = Priority.medium,
+    DateTime? dueDate,
+  }) {
+    final now = DateTime.now();
+    return _TaskFactory.createConcreteTask(
+      id: id,
+      title: title,
+      priority: priority,
+      dueDate: dueDate,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  factory Task.restore({
+    required String id,
+    required String title,
+    bool done = false,
+    Priority priority = Priority.medium,
+    DateTime? dueDate,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) {
+    return _TaskFactory.createConcreteTask(
+      id: id,
+      title: title,
+      done: done,
+      priority: priority,
+      dueDate: dueDate,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+
+  String get type;
+
+  bool get requiresImmediateAttention;
+
+  bool get isOverdue =>
+      dueDate != null && !done && dueDate!.isBefore(DateTime.now());
+
+  Task copyWith({
+    String? title,
+    bool? done,
+    Priority? priority,
+    DateTime? dueDate,
+    bool clearDueDate = false,
+    DateTime? updatedAt,
+  });
+}
+
+class StandardTask extends Task {
+  const StandardTask({
+    required super.id,
+    required super.title,
+    super.done,
+    super.priority,
+    super.dueDate,
+    required super.createdAt,
+    required super.updatedAt,
+  });
+
+  @override
+  String get type => 'standard';
+
+  @override
+  bool get requiresImmediateAttention => isOverdue;
+
+  @override
+  Task copyWith({
+    String? title,
+    bool? done,
+    Priority? priority,
+    DateTime? dueDate,
+    bool clearDueDate = false,
+    DateTime? updatedAt,
+  }) {
+    return _TaskFactory.createConcreteTask(
+      id: id,
+      title: title ?? this.title,
+      done: done ?? this.done,
+      priority: priority ?? this.priority,
+      dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
+    );
+  }
+}
+
+class UrgentTask extends Task {
+  const UrgentTask({
+    required super.id,
+    required super.title,
+    super.done,
+    super.dueDate,
+    required super.createdAt,
+    required super.updatedAt,
+  }) : super(priority: Priority.high);
+
+  String get warningLabel => 'Urgent';
+
+  @override
+  String get type => 'urgent';
+
+  @override
+  bool get requiresImmediateAttention => !done;
+
+  @override
+  Task copyWith({
+    String? title,
+    bool? done,
+    Priority? priority,
+    DateTime? dueDate,
+    bool clearDueDate = false,
+    DateTime? updatedAt,
+  }) {
+    return _TaskFactory.createConcreteTask(
+      id: id,
+      title: title ?? this.title,
+      done: done ?? this.done,
+      priority: priority ?? this.priority,
+      dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
+    );
+  }
+}
+
+class _TaskFactory {
+  static Task createConcreteTask({
     required String id,
     required String title,
     bool done = false,
@@ -64,100 +196,6 @@ abstract class Task {
       dueDate: dueDate,
       createdAt: createdAt,
       updatedAt: updatedAt,
-    );
-  }
-
-  factory Task.create({
-    required String id,
-    required String title,
-    Priority priority = Priority.medium,
-    DateTime? dueDate,
-  }) {
-    final now = DateTime.now();
-    return Task.build(
-      id: id,
-      title: title,
-      priority: priority,
-      dueDate: dueDate,
-      createdAt: now,
-      updatedAt: now,
-    );
-  }
-
-  bool get isOverdue =>
-      dueDate != null && !done && dueDate!.isBefore(DateTime.now());
-
-  Task copyWith({
-    String? title,
-    bool? done,
-    Priority? priority,
-    DateTime? dueDate,
-    bool clearDueDate = false,
-    DateTime? updatedAt,
-  });
-}
-
-class StandardTask extends Task {
-  const StandardTask({
-    required super.id,
-    required super.title,
-    super.done,
-    super.priority,
-    super.dueDate,
-    required super.createdAt,
-    required super.updatedAt,
-  });
-
-  @override
-  Task copyWith({
-    String? title,
-    bool? done,
-    Priority? priority,
-    DateTime? dueDate,
-    bool clearDueDate = false,
-    DateTime? updatedAt,
-  }) {
-    return Task.build(
-      id: id,
-      title: title ?? this.title,
-      done: done ?? this.done,
-      priority: priority ?? this.priority,
-      dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
-      createdAt: createdAt,
-      updatedAt: updatedAt ?? DateTime.now(),
-    );
-  }
-}
-
-class UrgentTask extends Task {
-  const UrgentTask({
-    required super.id,
-    required super.title,
-    super.done,
-    super.dueDate,
-    required super.createdAt,
-    required super.updatedAt,
-  }) : super(priority: Priority.high);
-
-  String get warningLabel => 'Urgent';
-
-  @override
-  Task copyWith({
-    String? title,
-    bool? done,
-    Priority? priority,
-    DateTime? dueDate,
-    bool clearDueDate = false,
-    DateTime? updatedAt,
-  }) {
-    return Task.build(
-      id: id,
-      title: title ?? this.title,
-      done: done ?? this.done,
-      priority: priority ?? this.priority,
-      dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
-      createdAt: createdAt,
-      updatedAt: updatedAt ?? DateTime.now(),
     );
   }
 }

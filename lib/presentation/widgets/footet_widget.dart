@@ -9,7 +9,7 @@ class FooterWidget {
   ) {
     final inputView = textInput.view().content;
     final cursorView = cursor.view().content;
-    final row = "$inputView$cursorView".padRight(width).substring(0, width);
-    return "$separatorLine\n$row";
+    final row = '$inputView$cursorView'.padRight(width).substring(0, width);
+    return '$separatorLine\n$row';
   }
 }

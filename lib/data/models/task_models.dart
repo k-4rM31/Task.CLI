@@ -14,7 +14,7 @@ class TaskModel {
   }
 
   static Task fromJson(Map<String, dynamic> json) {
-    return Task.build(
+    return Task.restore(
       id: json['id'] as String,
       title: json['title'] as String,
       done: json['done'] as bool? ?? false,
