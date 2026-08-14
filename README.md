@@ -2,6 +2,10 @@
 
 Task.CLI est une application en ligne de commande ecrite en Dart pour gerer une liste de taches locale. Elle permet d'ajouter, lister, trier, terminer et supprimer des taches tout en conservant les donnees dans un fichier JSON.
 
+## Captures d'écran
+
+![Interface d'acceuil de TASK.CLI](assets/screenshots/task_cli.png)
+
 ## Fonctionnalites
 
 - Ajouter une tache avec un titre, une priorite (`low`, `medium`, `high`) et une date limite optionnelle.
@@ -35,6 +39,7 @@ Task.CLI/
 │   │   └── widgets/
 │   └── task_cli.dart
 ├── test/
+│    └── ...
 └── README.md
 ```
 
