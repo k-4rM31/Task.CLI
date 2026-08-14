@@ -1,35 +1,41 @@
 import 'package:task_cli/domaine/entities/task.dart';
 import 'package:task_cli/domaine/exceptions/task_cli_exception.dart';
+import 'package:task_cli/domaine/repositories/repository.dart';
 import 'package:task_cli/domaine/repositories/task_repository.dart';
 
-class InMemoryTaskRepository implements TaskRepository {
-  final List<Task> _tasks = [];
+class InMemoryRepository<T> implements Repository<T> {
+  final String Function(T) idOf;
+  final List<T> _items = [];
+
+  InMemoryRepository(this.idOf);
 
   @override
-  Future<List<Task>> getAll() async {
-    return List.unmodifiable(_tasks);
-  }
+  Future<List<T>> getAll() async => List.unmodifiable(_items);
 
   @override
-  Future<void> add(Task task) async {
-    if (_tasks.any((item) => item.id == task.id)) {
-      throw InvalidTaskException('Une tache existe deja avec id: ${task.id}');
+  Future<void> add(T item) async {
+    if (_items.any((i) => idOf(i) == idOf(item))) {
+      throw InvalidTaskException('Élément déjà existant');
     }
-    _tasks.add(task);
+    _items.add(item);
   }
 
   @override
-  Future<void> update(Task task) async {
-    final index = _tasks.indexWhere((item) => item.id == task.id);
-    if (index == -1) throw TaskNotFoundException(task.id);
-
-    _tasks[index] = task;
+  Future<void> update(T item) async {
+    final index = _items.indexWhere((i) => idOf(i) == idOf(item));
+    if (index == -1) throw TaskNotFoundException(idOf(item));
+    _items[index] = item;
   }
 
   @override
   Future<void> delete(String id) async {
-    final initialLength = _tasks.length;
-    _tasks.removeWhere((item) => item.id == id);
-    if (_tasks.length == initialLength) throw TaskNotFoundException(id);
+    final before = _items.length;
+    _items.removeWhere((i) => idOf(i) == id);
+    if (_items.length == before) throw TaskNotFoundException(id);
   }
+}
+
+class InMemoryTaskRepository extends InMemoryRepository<Task>
+    implements TaskRepository {
+  InMemoryTaskRepository() : super((t) => t.id);
 }
